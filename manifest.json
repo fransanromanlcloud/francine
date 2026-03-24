@@ -1,0 +1,22 @@
+{
+  "name": "Mi Colección de Películas",
+  "short_name": "Colección",
+  "description": "Tu biblioteca personal de películas con búsqueda y filtros",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#111111",
+  "theme_color": "#e50914",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icono-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icono-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

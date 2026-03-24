@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Mi Colección de Películas</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#e50914">
+
+<style>
+body {
+  font-family: sans-serif;
+  margin:0;
+  background: linear-gradient(to bottom, #141414, #0b0b0b);
+  color:#fff;
+}
+
+/* PORTADA / HERO */
+header.hero {
+  width: 100%;
+  height: 300px;          /* altura desktop */
+  max-height: 50vh;       /* adaptable a pantallas grandes */
+  position: relative;
+  overflow: hidden;
+}
+
+header.hero img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;       /* llena el contenedor sin deformar */
+  object-position: center;
+  display: block;
+  transition: transform 0.5s ease;  /* para efecto zoom si quieres */
+}
+
+/* Degradado encima de la imagen */
+header.hero .overlay {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  padding: 20px;
+  background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+  box-sizing: border-box;
+}
+
+/* Título de la colección */
+header.hero .overlay h1 {
+  margin: 0;
+  font-size: 28px;
+  color: #fff;
+  text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+}
+
+/* CONTENIDO */
+.container { padding: 30px 10px 10px 10px; }
+
+/* BUSCADOR Y FILTROS */
+#buscador, #btnBuscar, #filtro, #filtroDirector {
+  padding:8px;
+  border-radius:5px;
+  border:none;
+}
+#btnBuscar {
+  background:#e50914;
+  color:white;
+  margin-left:5px;
+  cursor:pointer;
+}
+
+/* GRID */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.grid img {
+  width: 100%;
+  aspect-ratio: 2/3;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.grid img:hover {
+  transform: scale(1.08);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+  z-index: 2;
+}
+
+/* MEDIA QUERY MÓVIL */
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr); /* 3 columnas */
+    gap: 8px;  /* un poquito menos para que no se vea gigante */
+  }
+
+  .grid img {
+    width: 100%;
+    aspect-ratio: 2/3;  /* mantiene proporción vertical */
+    object-fit: cover;
+    border-radius: 8px;
+  }
+}
+
+/* MODALES */
+.modal {
+  display:none;
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.9);
+  justify-content:center;
+  align-items:flex-start;
+  overflow-y:auto;
+  padding-top:40px;
+}
+.modal-content {
+  background: #181818;
+  border-radius: 12px;
+  max-width: 600px;
+  width: 95%;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+}
+.close {
+  position:absolute;
+  top:10px;
+  right:15px;
+  font-size:24px;
+  cursor:pointer;
+}
+
+/* RESULTADOS BUSQUEDA */
+#listaResultados { max-height:60vh; overflow-y:auto; }
+#listaResultados div {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:10px;
+}
+#listaResultados img { width:70px; border-radius:5px; }
+#listaResultados span { flex:1; margin:0 10px; }
+
+/* MODAL NETFLIX */
+.modal-content.netflix {
+  padding:0;
+  overflow:hidden;
+}
+.banner {
+  position: relative;
+  height:250px;
+}
+.banner img { width:100%; height:100%; object-fit:cover; }
+.banner::after {
+  content: "";
+  position: absolute;
+  left:0;
+  top:0;
+  width:100%;
+  height:100%;
+  background: linear-gradient(
+    to right,
+    rgba(0,0,0,0.8),
+    transparent 60%
+  );
+  z-index:3;
+}
+.banner img {
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+  position: relative;
+  z-index:1;
+}
+
+.degradado {
+  position:absolute;
+  bottom:0;
+  width:100%;
+  height:100%;
+  background:linear-gradient(to top, rgba(0,0,0,1), transparent);
+  z-index:2;
+}
+.info { position:absolute; bottom:20px; left:20px; }
+.info h1 {
+  margin:0;
+  font-size:28px;
+  text-shadow: 0 4px 20px rgba(0,0,0,0.9);
+}
+.info {
+  position:absolute;
+  bottom:20px;
+  left:20px;
+  max-width: 80%;
+}
+.meta { opacity:0.8; color:white; }
+.contenido { padding:20px; overflow-y:auto; }
+.contenido p {
+  line-height: 1.5;
+  color: #ddd;
+}
+
+.meta {
+  color: #ddd;
+  font-size: 14px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+}
+#rating {
+  font-size:18px;
+  margin-bottom:10px;
+  color:#ffd700;
+}
+
+/* BOTÓN ELIMINAR */
+#eliminarBtn {
+  width:100%;
+  background:#e50914;
+  color:white;
+  border:none;
+  padding:10px;
+  border-radius:5px;
+  margin-top:20px;
+  cursor:pointer;
+}
+
+</style>
+</head>
+
+<body>
+
+<header class="hero">
+  <img src="https://raw.githubusercontent.com/fransanromanlcloud/francine/main/portada.jpg" alt="Portada">
+  <div class="overlay"><h1>Mi Colección</h1></div>
+</header>
+
+<div class="container">
+  <input type="search" id="buscador" placeholder="Buscar película...">
+  <button id="btnBuscar">🔍</button>
+
+  <select id="filtro"><option value="">Todos los géneros</option></select>
+  <select id="filtroDirector"><option value="">Todos los directores</option></select>
+
+  <div class="grid" id="grid"></div>
+</div>
+
+<!-- MODAL NETFLIX -->
+<div id="modal" class="modal">
+  <div class="modal-content netflix">
+
+    <span class="close">&times;</span>
+
+    <div class="banner">
+      <img id="backdrop">
+      <div class="degradado"></div>
+
+      <div class="info">
+        <h1 id="titulo"></h1>
+        <p id="meta"></p>
+      </div>
+    </div>
+
+    <div class="contenido">
+      <p id="rating"></p>
+      <p id="sinopsis"></p>
+      <p><b>Director:</b> <span id="director"></span></p>
+      <p><b>Actores:</b> <span id="actores"></span></p>
+      <button id="eliminarBtn">Eliminar</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL BUSQUEDA -->
+<div id="resultadosBusqueda" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h3>Selecciona una película</h3>
+    <div id="listaResultados"></div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyC7EKRWcBh35dLP6PXBtGjXVTydFJ27h8Y",
+  authDomain: "francine-c325d.firebaseapp.com",
+  projectId: "francine-c325d"
+};
+
+firebase.initializeApp(firebaseConfig);
+const dbCloud = firebase.firestore();
+
+const apiKey = "506264b1629573fa7fd0f5d73ada0644";
+const imgBase = "https://image.tmdb.org/t/p/w500";
+
+let coleccion = [];
+
+// GUARDAR PELÍCULA
+async function guardarPelicula(p){
+  if(coleccion.find(x=>x.id===p.id)) return;
+
+  await dbCloud.collection("peliculas").doc(String(p.id)).set(p);
+}
+
+// CARGAR COLECCIÓN
+async function cargarColeccion(){
+  const snapshot = await dbCloud.collection("peliculas").get();
+
+  coleccion = [];
+  snapshot.forEach(doc=>{
+    coleccion.push(doc.data());
+  });
+
+  renderGrid();
+  actualizarFiltros();
+}
+
+// RENDER GRID
+function renderGrid(){
+  const grid = document.getElementById("grid");
+  grid.innerHTML="";
+
+  const genero = filtro.value;
+  const director = filtroDirector.value;
+
+  coleccion.sort((a, b) => a.title.localeCompare(b.title, 'es', { sensitivity: 'base' }));
+
+  coleccion.forEach(p=>{
+    if((!genero || p.genres.some(g=>g.name===genero)) &&
+       (!director || p.director===director)){
+      const img = document.createElement("img");
+      img.src = p.poster_path ? imgBase+p.poster_path : "portada.jpg";
+      img.onclick = ()=>mostrarModal(p);
+      grid.appendChild(img);
+    }
+  });
+}
+
+function escucharCambios(){
+  dbCloud.collection("peliculas").onSnapshot(snapshot=>{
+    coleccion = [];
+    snapshot.forEach(doc=>{
+      coleccion.push(doc.data());
+    });
+
+    renderGrid();
+    actualizarFiltros();
+  });
+}
+
+escucharCambios();
+
+// MOSTRAR MODAL NETFLIX
+function mostrarModal(p){
+  document.getElementById("titulo").textContent = p.title || "Desconocido";
+  document.getElementById("sinopsis").textContent = p.overview || "Sin sinopsis";
+  document.getElementById("rating").textContent =
+    p.vote_average
+      ? `⭐ ${p.vote_average.toFixed(1)} (${p.vote_count} votos)`
+      : "Sin valoración";
+  document.getElementById("director").textContent = p.director || "Desconocido";
+  document.getElementById("actores").textContent = p.actors || "Desconocidos";
+  document.getElementById("backdrop").src =
+    p.backdrop_path
+      ? "https://image.tmdb.org/t/p/w780"+p.backdrop_path
+      : p.poster_path ? imgBase+p.poster_path : "portada.jpg";
+
+  document.getElementById("meta").textContent =
+    `${p.release_date?.split("-")[0] || ""} • ${p.genres ? p.genres.map(g=>g.name).join(", ") : ""}`;
+
+  document.getElementById("modal").style.display="flex";
+
+  document.getElementById("eliminarBtn").onclick = async ()=>{
+    await dbCloud.collection("peliculas").doc(String(p.id)).delete();
+
+    coleccion = coleccion.filter(x=>x.id!==p.id);
+    renderGrid();
+    actualizarFiltros();
+    document.getElementById("modal").style.display="none";
+  };
+}
+
+// CERRAR MODALES
+document.querySelector("#modal .close").onclick = ()=> document.getElementById("modal").style.display="none";
+document.querySelector("#resultadosBusqueda .close").onclick = cerrarBusqueda;
+window.onclick = e=>{
+  if(e.target.id==="modal") document.getElementById("modal").style.display="none";
+  if(e.target.id==="resultadosBusqueda") cerrarBusqueda();
+};
+function cerrarBusqueda(){
+  resultadosBusqueda.style.display="none";
+  listaResultados.innerHTML="";
+}
+
+// BUSCADOR
+btnBuscar.onclick = buscarPeliculas;
+buscador.addEventListener("keydown", e=>{
+  if(e.key==="Enter") buscarPeliculas();
+});
+async function buscarPeliculas(){
+  if(!buscador.value.trim()) return;
+  const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&language=es-ES&query=${encodeURIComponent(buscador.value)}`);
+  const data = await res.json();
+  mostrarResultados(data.results);
+}
+
+// MOSTRAR RESULTADOS
+function mostrarResultados(resultados){
+  listaResultados.innerHTML="";
+  resultados.forEach(p=>{
+    const div = document.createElement("div");
+    div.innerHTML = `
+      <img src="${p.poster_path ? imgBase+p.poster_path : ''}">
+      <span>${p.title} (${p.release_date?.split("-")[0] || "?"})</span>
+      <button>Añadir</button>
+    `;
+    div.querySelector("button").onclick = async ()=>{
+      const detRes = await fetch(`https://api.themoviedb.org/3/movie/${p.id}?api_key=${apiKey}&language=es-ES`);
+      const credRes = await fetch(`https://api.themoviedb.org/3/movie/${p.id}/credits?api_key=${apiKey}`);
+      const detalle = await detRes.json();
+      const cred = await credRes.json();
+
+      const peli = {
+        id: p.id,
+        title: p.title,
+        overview: detalle.overview,
+        poster_path: p.poster_path,
+        backdrop_path: detalle.backdrop_path,
+        release_date: detalle.release_date,
+        genres: detalle.genres,
+        director: cred.crew.find(c=>c.job==="Director")?.name || "",
+        actors: cred.cast.slice(0,5).map(a=>a.name).join(", "),
+        vote_average: detalle.vote_average,
+        vote_count: detalle.vote_count
+      };
+
+      guardarPelicula(peli);
+      cerrarBusqueda();
+    };
+    listaResultados.appendChild(div);
+  });
+  resultadosBusqueda.style.display="flex";
+}
+
+// FILTROS
+filtro.onchange = renderGrid;
+filtroDirector.onchange = renderGrid;
+
+function actualizarFiltros(){
+  const generos = new Set();
+  const directores = new Set();
+
+  coleccion.forEach(p=>{
+    // Evitar errores si no hay géneros
+    if(p.genres){
+      p.genres.forEach(g=>generos.add(g.name));
+    }
+
+    // Evitar errores si no hay director
+    if(p.director){
+      directores.add(p.director);
+    }
+  });
+
+  // Limpiar selects
+  filtro.innerHTML='<option value="">Géneros</option>';
+  filtroDirector.innerHTML='<option value="">Directores</option>';
+
+  // Ordenar géneros
+  [...generos].sort((a,b)=>a.localeCompare(b,'es',{sensitivity:'base'})).forEach(g=>{
+    const o=document.createElement("option");
+    o.value=g;
+    o.textContent=g;
+    filtro.appendChild(o);
+  });
+
+  // Ordenar directores
+  [...directores].sort((a,b)=>a.localeCompare(b,'es',{sensitivity:'base'})).forEach(d=>{
+    const o=document.createElement("option");
+    o.value=d;
+    o.textContent=d;
+    filtroDirector.appendChild(o);
+  });
+}
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./sw.js")
+    .then(() => console.log("Service Worker activo"))
+    .catch(err => console.log("Error SW:", err));
+}
+
+</script>
+
+</body>
+</html>
